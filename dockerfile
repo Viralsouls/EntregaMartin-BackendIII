@@ -1,21 +1,16 @@
-# Imagen base
 FROM node:20-alpine
 
-# Crear directorio de la app
 WORKDIR /app
 
-# Copiar package.json e instalar dependencias
+# Copiar solo dependencias
 COPY package*.json ./
+
+# Instalar dependencias dentro del contenedor
 RUN npm install
 
-# Copiar el resto del código
+# Copiar el resto del proyecto
 COPY . .
 
-# Exponer el puerto
 EXPOSE 8080
 
-# Variable de entorno
-ENV PORT=8080
-
-# Comando de inicio
 CMD ["npm", "start"]
