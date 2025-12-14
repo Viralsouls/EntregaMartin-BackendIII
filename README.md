@@ -1,156 +1,161 @@
-# Entrega N°1 - Mocks y Mocking
+# 📦 EntregaMartin – Backend III
 
-## Router base
-
-El router de mocks se encuentra montado bajo la ruta base:
-
-- `/api/mocks`
+Proyecto backend desarrollado con **Node.js, Express y MongoDB**, correspondiente a la **entrega final del curso Backend III**. Incluye manejo de usuarios, mascotas, adopciones, autenticación, mocks de datos y **dockerización completa** del entorno.
 
 ---
 
-## Endpoints
+## 🚀 Tecnologías utilizadas
 
-### GET `/api/mocks/mockingpets`
+* Node.js
+* Express
+* MongoDB + Mongoose
+* JWT & Cookies
+* bcrypt
+* Faker (mocking)
+* Docker & Docker Compose
+* dotenv
 
-Genera y devuelve una lista de mascotas de prueba **en memoria** (no se insertan en la base de datos).
+---
 
-**Query params opcionales:**
+## 📂 Estructura del proyecto
 
-- `quantity` (number): cantidad de mascotas a generar.  
-  - Por defecto: `100`
-  - Máximo: `1000`
-
-**Ejemplo:**
-
-```http
-GET http://localhost:8080/api/mocks/mockingpets?quantity=20
+```
+src/
+ ├── app.js
+ ├── config/
+ ├── dao/
+ ├── mocks/
+ ├── routes/
+ ├── services/
+ └── utils/
 ```
 
-**Respuesta:**
+---
+
+## ⚙️ Variables de entorno
+
+El proyecto utiliza variables de entorno para proteger datos sensibles.
+
+### `.env.example`
+
+```env
+MONGO_URL=TU_MONGO_URL_AQUI
+PORT=8080
+```
+
+⚠️ **El archivo `.env` real no se sube al repositorio**.
+
+---
+
+## 🧪 Endpoints principales
+
+### 🔹 Usuarios
+
+* `GET /api/users`
+* `POST /api/users`
+
+### 🔹 Mascotas
+
+* `GET /api/pets`
+* `POST /api/pets`
+
+### 🔹 Adopciones
+
+* `POST /api/adoptions`
+
+### 🔹 Mocks
+
+* `GET /api/mocks/mockingusers` → genera 50 usuarios mock
+* `GET /api/mocks/mockingpets` → genera mascotas mock
+* `POST /api/mocks/generateData` → genera e inserta usuarios y mascotas reales en la DB
+
+Body de ejemplo:
 
 ```json
 {
-  "status": "success",
-  "payload": [
-    {
-      "name": "Pet12345",
-      "specie": "dog",
-      "adopted": false
-    },
-    ...
-  ]
+  "users": 10,
+  "pets": 5
 }
 ```
 
 ---
 
-### GET `/api/mocks/mockingusers`
+## 🐳 Docker
 
-Utiliza un módulo de mocking para generar usuarios de prueba con formato similar a un documento de Mongo.
+El proyecto está completamente dockerizado para facilitar su ejecución.
 
-**Características de los usuarios generados:**
+### 📄 Dockerfile
 
-- `password`: contiene la contraseña `"coder123"` **encriptada**.
-- `role`: puede ser `"user"` o `"admin"`.
-- `pets`: array vacío `[]`.
-- Incluye un `_id` generado con `mongoose.Types.ObjectId()` para simular el formato de Mongo.
+```Dockerfile
+FROM node:20-alpine
 
-**Query params opcionales:**
+WORKDIR /app
 
-- `quantity` (number): cantidad de usuarios a generar.  
-  - Por defecto: `50`
-  - Máximo: `1000`
+COPY package*.json ./
+RUN npm install
 
-**Ejemplo:**
+COPY . .
 
-```http
-GET http://localhost:8080/api/mocks/mockingusers?quantity=50
+EXPOSE 8080
+
+CMD ["npm", "start"]
 ```
 
-**Respuesta:**
+### 📄 docker-compose.yml
 
-```json
-{
-  "status": "success",
-  "payload": [
-    {
-      "_id": "66f0c9f1f2c2d91234567890",
-      "first_name": "User12345",
-      "last_name": "Test12345",
-      "email": "user12345@test.com",
-      "password": "$2b$10$...",
-      "role": "user",
-      "pets": []
-    },
-    ...
-  ]
-}
+```yaml
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URL=${MONGO_URL}
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
 ```
 
----
+### 📄 .dockerignore
 
-### POST `/api/mocks/generateData`
-
-Genera e **inserta en la base de datos** usuarios y mascotas de prueba.
-
-**Body (JSON):**
-
-- `users` (number): cantidad de usuarios mock a generar e insertar.
-- `pets` (number): cantidad de mascotas mock a generar e insertar.
-
-**Reglas:**
-
-- Ambos valores deben ser números **positivos**.
-- Máximo `1000` usuarios y `1000` mascotas por petición.
-
-**Ejemplo:**
-
-```http
-POST http://localhost:8080/api/mocks/generateData
-Content-Type: application/json
-
-{
-  "users": 5,
-  "pets": 10
-}
 ```
-
-**Respuesta:**
-
-```json
-{
-  "status": "success",
-  "message": "Mock data generada e insertada correctamente",
-  "payload": {
-    "usersInserted": 5,
-    "petsInserted": 10
-  }
-}
+node_modules
+.env
+.git
 ```
 
 ---
 
-## Verificación de la inserción
+## ▶️ Cómo ejecutar el proyecto
 
-Para comprobar los registros generados por `/api/mocks/generateData`, se utilizan los endpoints GET ya existentes:
+### Opción 1: Docker (recomendado)
 
-- `GET /api/users` → debe incluir los usuarios generados.
-- `GET /api/pets` → debe incluir las mascotas generadas.
+```bash
+docker compose up --build
+```
+
+La API quedará disponible en:
+
+```
+http://localhost:8080
+```
 
 ---
 
-## Criterios cumplidos
+---
 
-1. **Creación del router de mocks y migración de endpoints**  
-   - Router `mocks.router.js` bajo `/api/mocks`.  
-   - Endpoint `/mockingpets` dentro de este router.
+## 👨‍💻 Autor
 
-2. **Módulo de mocking de usuarios**  
-   - Generación de usuarios con contraseña encriptada, rol `"user"`/`"admin"` y `pets: []`.
-
-3. **Endpoint GET `/mockingusers`**  
-   - Utiliza el módulo de mocking para devolver la cantidad de usuarios solicitados.
-
-4. **Endpoint POST `/generateData`**  
-   - Recibe `users` y `pets`, genera los registros e inserta en la base.  
-   - La inserción se comprueba con los GET de `users` y `pets`.
+**Juan Martín**
+Entrega final – Backend III
